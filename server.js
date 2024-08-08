@@ -66,10 +66,6 @@ loadModels()
   
       console.log(`Face verification result: isMatch = ${isMatch}, distance = ${distance}`);
   
-      if (!isMatch) {
-        return res.status(400).json({ message: "Face verification failed. The captured photo does not match the uploaded photo." });
-      }
-  
       res.json({ isMatch, distance });
     } catch (error) {
       console.error("Face verification error:", error);
