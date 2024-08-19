@@ -9,23 +9,18 @@ const app = express();
 
 console.log('FRONTEND_URL:', process.env.FRONTEND_URL);
 
-const corsOptions = {
-  origin: (origin, callback) => {
-    console.log('Request origin:', origin);
-    const allowedOrigins = [process.env.FRONTEND_URL, "https://chat-app-client-five-sand.vercel.app"];
-    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      console.log('Origin not allowed by CORS');
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true,
-};
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', process.env.FRONTEND_URL || 'https://chat-app-client-five-sand.vercel.app');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  res.header('Access-Control-Allow-Credentials', true);
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
+  next();
+});
 
-app.use(cors(corsOptions));
+app.use(cors());
 
 
 const upload = multer({ storage: multer.memoryStorage() });
@@ -62,6 +57,10 @@ app.post(
   ]),
   async (req, res) => {
     console.log('Verify endpoint hit');
+    console.log('Verify endpoint hit');
+    console.log('Request headers:', req.headers);
+    console.log('Request body:', req.body);
+    console.log('Request files:', req.files);
     try {
       console.log("Received verification request");
 
