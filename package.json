@@ -1,15 +1,21 @@
 {
-    "name": "face-detection-service",
-    "version": "1.0.0",
-    "main": "server.js",
-    "scripts": {
-        "start": "node server.js"
-    },
-    "dependencies": {
-        "canvas": "^2.11.2",
-        "cors": "^2.8.5",
-        "express": "^4.17.1",
-        "face-api.js": "^0.22.2",
-        "multer": "^1.4.3"
+    "version": 2,
+    "builds": [
+      {
+        "src": "api/index.js",
+        "use": "@vercel/node",
+        "config": {
+          "installCommand": "npm install --build-from-source=canvas"
+        }
+      }
+    ],
+    "routes": [
+      {
+        "src": "/(.*)",
+        "dest": "api/index.js"
+      }
+    ],
+    "env": {
+      "NODE_ENV": "production"
     }
-}
+  }

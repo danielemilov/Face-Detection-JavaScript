@@ -3,6 +3,7 @@ const multer = require("multer");
 const faceapi = require("face-api.js");
 const cors = require("cors");
 const path = require("path");
+const { createCanvas, Image } = require("canvas");
 
 const app = express();
 
@@ -24,22 +25,7 @@ process.on('unhandledRejection', (reason, promise) => {
 
 const upload = multer({ storage: multer.memoryStorage() });
 
-// Attempt to load canvas, use mock if not available
-let canvas;
-try {
-  canvas = require("canvas");
-} catch (err) {
-  console.warn("Canvas library not available, using mock implementation");
-  canvas = {
-    loadImage: async () => ({
-      width: 100,
-      height: 100,
-    }),
-  };
-}
-
-const { Canvas, Image, ImageData } = canvas;
-faceapi.env.monkeyPatch({ Canvas, Image, ImageData });
+faceapi.env.monkeyPatch({ Canvas: createCanvas, Image });
 
 async function loadModels() {
   await faceapi.nets.tinyFaceDetector.loadFromDisk(
@@ -55,7 +41,6 @@ async function loadModels() {
 
 let modelsLoaded = false;
 
-// Add a route for the root path
 app.get('/', (req, res) => {
   res.send('Face Detection API is running. Use POST /verify for face verification.');
 });
@@ -87,12 +72,8 @@ app.post(
           .json({ message: "Both photos are required for verification." });
       }
 
-      const uploadedImg = await canvas.loadImage(
-        req.files.uploadedPhoto[0].buffer
-      );
-      const capturedImg = await canvas.loadImage(
-        req.files.capturedPhoto[0].buffer
-      );
+      const uploadedImg = await createImageFromBuffer(req.files.uploadedPhoto[0].buffer);
+      const capturedImg = await createImageFromBuffer(req.files.capturedPhoto[0].buffer);
 
       console.log("Processing uploaded image");
       const uploadedDetection = await faceapi
@@ -136,6 +117,15 @@ app.post(
     }
   }
 );
+
+async function createImageFromBuffer(buffer) {
+  const img = new Image();
+  return new Promise((resolve, reject) => {
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+    img.src = buffer;
+  });
+}
 
 if (process.env.NODE_ENV !== 'production') {
   const PORT = process.env.PORT || 3001;
