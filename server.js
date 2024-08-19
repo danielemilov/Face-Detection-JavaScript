@@ -7,14 +7,13 @@ const path = require("path");
 
 const app = express();
 
-const corsOptions = {
-  origin: [process.env.FRONTEND_URL || 'http://localhost:5173', 'https://chat-app-client-five-sand.vercel.app'],
+// More permissive CORS configuration
+app.use(cors({
+  origin: '*',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
-};
-
-app.use(cors(corsOptions));
+}));
 
 const upload = multer({ storage: multer.memoryStorage() });
 
@@ -42,12 +41,8 @@ loadModels()
     console.error("Error loading face-api models:", err);
   });
 
-// Add a preflight route handler
-app.options('/verify-face', cors(corsOptions));
-
 app.post(
   "/verify-face",
-  cors(corsOptions), // Apply CORS to this specific route
   upload.fields([
     { name: "uploadedPhoto", maxCount: 1 },
     { name: "capturedPhoto", maxCount: 1 },
@@ -114,6 +109,7 @@ app.post(
 );
 
 const PORT = process.env.PORT || 3001;
-app.listen(PORT, () =>
-  console.log(`Face verification service running on port ${PORT}`)
-);
+app.listen(PORT, () => {
+  console.log(`Face verification service running on port ${PORT}`);
+  console.log(`CORS enabled for all origins`);
+});
