@@ -55,6 +55,11 @@ async function loadModels() {
 
 let modelsLoaded = false;
 
+// Add a route for the root path
+app.get('/', (req, res) => {
+  res.send('Face Detection API is running. Use POST /verify for face verification.');
+});
+
 app.post(
   "/verify",
   upload.fields([
