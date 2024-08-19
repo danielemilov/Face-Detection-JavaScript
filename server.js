@@ -7,7 +7,6 @@ const path = require("path");
 
 const app = express();
 
-
 app.use(cors({
   origin: process.env.FRONTEND_URL || 'https://chat-app-client-five-sand.vercel.app',
   methods: ['GET', 'POST', 'OPTIONS'],
@@ -23,7 +22,6 @@ app.use((err, req, res, next) => {
 process.on('unhandledRejection', (reason, promise) => {
   console.log('Unhandled Rejection at:', promise, 'reason:', reason);
 });
-
 
 const upload = multer({ storage: multer.memoryStorage() });
 
@@ -43,13 +41,7 @@ async function loadModels() {
   );
 }
 
-loadModels()
-  .then(() => {
-    console.log("Face-api models loaded");
-  })
-  .catch((err) => {
-    console.error("Error loading face-api models:", err);
-  });
+let modelsLoaded = false;
 
 app.post(
   "/verify",
@@ -59,11 +51,16 @@ app.post(
   ]),
   async (req, res) => {
     console.log('Verify endpoint hit');
-    console.log('Verify endpoint hit');
     console.log('Request headers:', req.headers);
     console.log('Request body:', req.body);
     console.log('Request files:', req.files);
     try {
+      if (!modelsLoaded) {
+        await loadModels();
+        modelsLoaded = true;
+        console.log("Face-api models loaded");
+      }
+
       console.log("Received verification request");
 
       if (!req.files.uploadedPhoto || !req.files.capturedPhoto) {
@@ -122,7 +119,13 @@ app.post(
     }
   }
 );
-const PORT = process.env.PORT || 3001;
-app.listen(PORT, () =>
-  console.log(`Face verification service running on port ${PORT}`)
-);
+
+// Remove the explicit port listening for Vercel deployment
+if (process.env.NODE_ENV !== 'production') {
+  const PORT = process.env.PORT || 3001;
+  app.listen(PORT, () =>
+    console.log(`Face verification service running on port ${PORT}`)
+  );
+}
+
+module.exports = app;
