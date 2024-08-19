@@ -7,20 +7,20 @@ const path = require("path");
 
 const app = express();
 
-console.log('FRONTEND_URL:', process.env.FRONTEND_URL);
+const corsOptions = {
+  origin: process.env.FRONTEND_URL || 'https://chat-app-client-five-sand.vercel.app',
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
+};
+
+app.use(cors(corsOptions));
 
 app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', process.env.FRONTEND_URL || 'https://chat-app-client-five-sand.vercel.app');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-  res.header('Access-Control-Allow-Credentials', true);
-  if (req.method === 'OPTIONS') {
-    return res.sendStatus(200);
-  }
+  console.log('Request origin:', req.headers.origin);
+  console.log('CORS options:', corsOptions);
   next();
 });
-
-app.use(cors());
 
 
 const upload = multer({ storage: multer.memoryStorage() });
