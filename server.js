@@ -44,7 +44,7 @@ loadModels()
   });
 
 app.post(
-  "/verify",
+  "/verify-face",
   upload.fields([
     { name: "uploadedPhoto", maxCount: 1 },
     { name: "capturedPhoto", maxCount: 1 },
