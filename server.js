@@ -1,34 +1,27 @@
 const express = require("express");
 const multer = require("multer");
 const faceapi = require("face-api.js");
+const canvas = require("canvas");
 const cors = require("cors");
 const path = require("path");
-const { createCanvas, Image } = require("canvas");
 
 const app = express();
 
-app.use(cors({
-  origin: process.env.FRONTEND_URL || 'https://chat-app-client-five-sand.vercel.app',
-  methods: ['GET', 'POST', 'OPTIONS'],
+const corsOptions = {
+  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
-}));
+};
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(cors(corsOptions));
 
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).send('Something broke!');
-});
-
-process.on('unhandledRejection', (reason, promise) => {
-  console.log('Unhandled Rejection at:', promise, 'reason:', reason);
-});
 
 const upload = multer({ storage: multer.memoryStorage() });
 
-faceapi.env.monkeyPatch({ Canvas: createCanvas, Image });
+// Load face-api models
+const { Canvas, Image, ImageData } = canvas;
+faceapi.env.monkeyPatch({ Canvas, Image, ImageData });
 
 async function loadModels() {
   await faceapi.nets.tinyFaceDetector.loadFromDisk(
@@ -42,11 +35,13 @@ async function loadModels() {
   );
 }
 
-let modelsLoaded = false;
-
-app.get('/', (req, res) => {
-  res.send('Face Detection API is running. Use POST /verify for face verification.');
-});
+loadModels()
+  .then(() => {
+    console.log("Face-api models loaded");
+  })
+  .catch((err) => {
+    console.error("Error loading face-api models:", err);
+  });
 
 app.post(
   "/verify",
@@ -55,17 +50,7 @@ app.post(
     { name: "capturedPhoto", maxCount: 1 },
   ]),
   async (req, res) => {
-    console.log('Verify endpoint hit');
-    console.log('Request headers:', req.headers);
-    console.log('Request body:', req.body);
-    console.log('Request files:', req.files);
     try {
-      if (!modelsLoaded) {
-        await loadModels();
-        modelsLoaded = true;
-        console.log("Face-api models loaded");
-      }
-
       console.log("Received verification request");
 
       if (!req.files.uploadedPhoto || !req.files.capturedPhoto) {
@@ -75,8 +60,12 @@ app.post(
           .json({ message: "Both photos are required for verification." });
       }
 
-      const uploadedImg = await createImageFromBuffer(req.files.uploadedPhoto[0].buffer);
-      const capturedImg = await createImageFromBuffer(req.files.capturedPhoto[0].buffer);
+      const uploadedImg = await canvas.loadImage(
+        req.files.uploadedPhoto[0].buffer
+      );
+      const capturedImg = await canvas.loadImage(
+        req.files.capturedPhoto[0].buffer
+      );
 
       console.log("Processing uploaded image");
       const uploadedDetection = await faceapi
@@ -120,21 +109,7 @@ app.post(
     }
   }
 );
-
-async function createImageFromBuffer(buffer) {
-  const img = new Image();
-  return new Promise((resolve, reject) => {
-    img.onload = () => resolve(img);
-    img.onerror = reject;
-    img.src = buffer;
-  });
-}
-
-if (process.env.NODE_ENV !== 'production') {
-  const PORT = process.env.PORT || 3001;
-  app.listen(PORT, () =>
-    console.log(`Face verification service running on port ${PORT}`)
-  );
-}
-
-module.exports = app;
+const PORT = process.env.PORT || 3001;
+app.listen(PORT, () =>
+  console.log(`Face verification service running on port ${PORT}`)
+);
