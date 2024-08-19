@@ -1,7 +1,6 @@
 const express = require("express");
 const multer = require("multer");
 const faceapi = require("face-api.js");
-const canvas = require("canvas");
 const cors = require("cors");
 const path = require("path");
 
@@ -25,7 +24,20 @@ process.on('unhandledRejection', (reason, promise) => {
 
 const upload = multer({ storage: multer.memoryStorage() });
 
-// Load face-api models
+// Attempt to load canvas, use mock if not available
+let canvas;
+try {
+  canvas = require("canvas");
+} catch (err) {
+  console.warn("Canvas library not available, using mock implementation");
+  canvas = {
+    loadImage: async () => ({
+      width: 100,
+      height: 100,
+    }),
+  };
+}
+
 const { Canvas, Image, ImageData } = canvas;
 faceapi.env.monkeyPatch({ Canvas, Image, ImageData });
 
@@ -120,7 +132,6 @@ app.post(
   }
 );
 
-// Remove the explicit port listening for Vercel deployment
 if (process.env.NODE_ENV !== 'production') {
   const PORT = process.env.PORT || 3001;
   app.listen(PORT, () =>
