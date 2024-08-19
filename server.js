@@ -15,10 +15,13 @@ app.use(cors({
   credentials: true,
 }));
 
-app.use((req, res, next) => {
-  console.log('Request origin:', req.headers.origin);
-  console.log('CORS options:', corsOptions);
-  next();
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).send('Something broke!');
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.log('Unhandled Rejection at:', promise, 'reason:', reason);
 });
 
 
