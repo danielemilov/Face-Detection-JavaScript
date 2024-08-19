@@ -7,14 +7,13 @@ const path = require("path");
 
 const app = express();
 
-const corsOptions = {
+
+app.use(cors({
   origin: process.env.FRONTEND_URL || 'https://chat-app-client-five-sand.vercel.app',
   methods: ['GET', 'POST', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
-};
-
-app.use(cors(corsOptions));
+}));
 
 app.use((req, res, next) => {
   console.log('Request origin:', req.headers.origin);
