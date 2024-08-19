@@ -7,8 +7,19 @@ const path = require("path");
 
 const app = express();
 
+console.log('FRONTEND_URL:', process.env.FRONTEND_URL);
+
 const corsOptions = {
-  origin: process.env.FRONTEND_URL || "https://chat-app-client-five-sand.vercel.app",
+  origin: (origin, callback) => {
+    console.log('Request origin:', origin);
+    const allowedOrigins = [process.env.FRONTEND_URL, "https://chat-app-client-five-sand.vercel.app"];
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      console.log('Origin not allowed by CORS');
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
@@ -50,6 +61,7 @@ app.post(
     { name: "capturedPhoto", maxCount: 1 },
   ]),
   async (req, res) => {
+    console.log('Verify endpoint hit');
     try {
       console.log("Received verification request");
 
