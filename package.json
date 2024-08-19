@@ -1,21 +1,17 @@
 {
-    "version": 2,
-    "builds": [
-      {
-        "src": "api/index.js",
-        "use": "@vercel/node",
-        "config": {
-          "installCommand": "npm install --build-from-source=canvas"
-        }
-      }
-    ],
-    "routes": [
-      {
-        "src": "/(.*)",
-        "dest": "api/index.js"
-      }
-    ],
-    "env": {
-      "NODE_ENV": "production"
+    "name": "face-detection-service",
+    "version": "1.0.0",
+    "description": "Face detection and verification service",
+    "main": "server.js",
+    "scripts": {
+        "start": "node server.js"
+    },
+    "dependencies": {
+        "axios": "^0.21.1",
+        "canvas": "^2.11.2",
+        "cors": "^2.8.5",
+        "express": "^4.19.2",
+        "face-api.js": "^0.22.2",
+        "multer": "^1.4.4"
     }
-  }
+}
